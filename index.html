@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Jeux - Lettres & Chiffres</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&family=Fira+Code:wght@500&display=swap');
+
+  :root {
+    --bg: #0f0f23;
+    --card: #1a1a2e;
+    --accent: #00f5d4;
+    --accent2: #9b5de5;
+    --error: #f72585;
+    --warning: #ffaa00;
+    --text: #f8f9fa;
+    --glow: 0 0 20px rgba(0, 245, 212, 0.4);
+  }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 20% 50%, rgba(155, 93, 229, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(0, 245, 212, 0.1) 0%, transparent 50%);
+    color: var(--text);
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+.container { width: 100%; max-width: 600px; animation: fadeIn 0.8s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  h1 {
+    text-align: center; font-weight: 800; font-size: 2.5rem; margin-bottom: 10px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+
+.subtitle { text-align: center; opacity: 0.7; margin-bottom: 30px; }
+.game-card {
+    background: var(--card); border-radius: 20px; padding: 30px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+.menu { display: grid; gap: 15px; }
+.menu-btn {
+    background: rgba(0, 0, 0, 0.3); border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px; padding: 25px; cursor: pointer; transition: all 0.3s ease; text-align: left;
+  }
+.menu-btn:hover { border-color: var(--accent); box-shadow: var(--glow); transform: translateY(-3px); }
+.menu-btn h3 { font-size: 1.3rem; margin-bottom: 5px; }
+.menu-btn p { opacity: 0.7; font-size: 0.9rem; }
+
+.rectangle {
+    font-family: 'Fira Code', monospace; background: rgba(0, 0, 0, 0.3);
+    border: 2px solid var(--accent); border-radius: 12px; padding: 20px; text-align: center;
+    font-size: 1.8rem; letter-spacing: 8px; margin: 25px 0; box-shadow: var(--glow); white-space: pre;
+  }
+.rectangle.pop { animation: pop 0.4s ease; }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(0, 245, 212, 0.8); }
+    100% { transform: scale(1); }
+  }
+
+.input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+.input-group.vertical { flex-direction: column; }
+  input {
+    flex: 1; background: rgba(0, 0, 0, 0.3); border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px; padding: 15px; color: var(--text); font-size: 1.1rem;
+    font-family: 'Poppins', sans-serif; transition: all 0.3s ease;
+  }
+  input:focus { outline: none; border-color: var(--accent); box-shadow: var(--glow); }
+  button {
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none;
+    border-radius: 12px; padding: 15px 25px; color: var(--bg); font-weight: 600;
+    font-size: 1rem; cursor: pointer; transition: all 0.3s ease;
+  }
+  button:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(155, 93, 229, 0.5); }
+  button.secondary { background: rgba(255, 255, 255, 0.1); color: var(--text); }
+
+.message { min-height: 30px; text-align: center; font-weight: 600; margin: 15px 0; transition: all 0.3s ease; }
+.message.error { color: var(--error); animation: shake 0.4s ease; }
+.message.success { color: var(--accent); }
+.message.warning { color: var(--warning); }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+.lettres-utilisees span {
+    display: inline-block; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px; padding: 5px 10px; margin: 4px; font-family: 'Fira Code', monospace; animation: fadeInLetter 0.3s ease;
+  }
+  @keyframes fadeInLetter { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+
+.felicitations { display: none; text-align: center; margin-top: 30px; animation: bounceIn 0.8s ease; }
+  @keyframes bounceIn {
+    0% { opacity: 0; transform: scale(0.3); } 50% { opacity: 1; transform: scale(1.1); }
+    70% { transform: scale(0.9); } 100% { transform: scale(1); }
+  }
+.felicitations h2 {
+    font-size: 2rem; margin: 15px 0; background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+.felicitations.cadre {
+    font-family: 'Fira Code', monospace; font-size: 1.5rem; border: 3px solid var(--accent);
+    display: inline-block; padding: 15px 30px; border-radius: 12px; box-shadow: var(--glow);
+  }
+
+.hidden { display: none!important; }
+.restart { margin-top: 20px; width: 100%; }
+.confetti {
+    position: fixed; width: 10px; height: 10px; background: var(--accent);
+    top: -10px; animation: confetti 3s linear forwards;
+  }
+  @keyframes confetti { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+.stats-chiffre { display: flex; justify-content: space-around; margin: 20px 0; font-family: 'Fira Code', monospace; }
+.stats-chiffre div { text-align: center; }
+.stats-chiffre.label { opacity: 0.6; font-size: 0.8rem; }
+.stats-chiffre.value { font-size: 1.5rem; color: var(--accent); }
+
+.joueur-tour {
+    text-align: center; font-weight: 600; margin-bottom: 15px; font-size: 1.1rem;
+    color: var(--accent2); animation: fadeIn 0.5s ease;
+ }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Mini Jeux (❁´◡`❁)</h1>
+    <p class="subtitle">Pas de Connexion ? On Joue----- by @emileag</p>
+
+    <div class="game-card">
+      <!-- Menu principal -->
+      <div id="menu" class="menu">
+        <div class="menu-btn" data-mode="lettres-solo">
+          <h3>A: Jeu de Lettres Solo</h3>
+          <p>Devine le mot secret choisi par l’ordi</p>
+        </div>
+        <div class="menu-btn" data-mode="lettres-duo">
+          <h3>B: Jeu de Lettres 2 Joueurs</h3>
+          <p>J1 choisit un mot, J2 doit le deviner</p>
+        </div>
+        <div class="menu-btn" data-mode="chiffres">
+          <h3>C: Jeu de Chiffres</h3>
+          <p>Choisis un intervalle et trouve le nombre secret</p>
+        </div>
+      </div>
+
+      <!-- Setup 2 joueurs -->
+      <div id="setupDuo" class="hidden">
+        <button class="secondary" id="retourMenu0">← Menu</button>
+        <div class="joueur-tour">Joueur 1 : Entre le mot secret</div>
+        <div class="input-group vertical">
+          <input type="password" id="motSecretJ1" placeholder="Mot secret pour J2" maxlength="20" autocomplete="off">
+          <button id="validerMotJ1">Valider et passer à J2</button>
+        </div>
+        <div class="message" id="messageSetupDuo"></div>
+      </div>
+
+      <!-- Jeu de lettres -->
+      <div id="jeuLettres" class="hidden">
+        <button class="secondary" id="retourMenu1">← Menu</button>
+        <div class="joueur-tour" id="tourJoueur"></div>
+        <div class="rectangle" id="rectangle"></div>
+        <div class="input-group" id="inputGroupLettres">
+          <input type="text" id="saisieLettre" placeholder="Entre une lettre ou le code admin" maxlength="20" autocomplete="off">
+          <button id="validerLettre">Valider</button>
+        </div>
+        <div class="message" id="messageLettre"></div>
+        <div class="lettres-utilisees" id="lettresUtilisees">
+          <p style="opacity: 0.6; font-size: 0.9rem;">Lettres utilisées :</p>
+          <div id="listeLettres"></div>
+        </div>
+      </div>
+
+      <!-- Setup jeu de chiffres -->
+      <div id="setupChiffres" class="hidden">
+        <button class="secondary" id="retourMenu2">← Menu</button>
+        <h3 style="margin: 20px 0 15px;">Choisis ton intervalle</h3>
+        <div class="input-group vertical">
+          <input type="number" id="maxNombre" placeholder="Nombre maximum ex: 100" min="1" value="100">
+          <button id="startChiffres">Commencer</button>
+        </div>
+        <div class="message" id="messageSetup"></div>
+      </div>
+
+      <!-- Jeu de chiffres -->
+      <div id="jeuChiffres" class="hidden">
+        <button class="secondary" id="retourMenu3">← Menu</button>
+        <div class="stats-chiffre">
+          <div><div class="label">Intervalle</div><div class="value" id="intervalleAff">0-100</div></div>
+          <div><div class="label">Essais</div><div class="value" id="essaisAff">0</div></div>
+        </div>
+        <div class="input-group" id="inputGroupChiffres">
+          <input type="number" id="saisieChiffre" placeholder="Devine le nombre" autocomplete="off">
+          <button id="validerChiffre">Valider</button>
+        </div>
+        <div class="message" id="messageChiffre"></div>
+      </div>
+
+      <!-- Écran félicitations -->
+      <div class="felicitations" id="felicitations">
+        <div class="cadre">Félicitations</div>
+        <h2 id="texteVictoire">Tu as trouvé!</h2>
+        <button class="restart" id="restart">Rejouer</button>
+        <button class="restart secondary" id="changeMode">Changer de mode</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // État global
+  let modeActuel = null;
+  let jeuTermine = false;
+  let modeDuo = false;
+
+  // Jeu de lettres
+  const mots = ["PROGRAMME","CLAVIER","SOURIS","ECRAN","PYTHON","JAVASCRIPT","ORDINATEUR","INTERNET"];
+  const CODE_ADMIN = "emilecpt@2003?";
+  let motSecret = "";
+  let lettresTrouvees = [];
+  let lettresUtilisees = new Set();
+
+  // Jeu de chiffres
+  let nombreSecret = 0;
+  let maxIntervalle = 100;
+  let nbEssais = 0;
+
+  // Elements DOM
+  const menuEl = document.getElementById("menu");
+  const setupDuoEl = document.getElementById("setupDuo");
+  const jeuLettresEl = document.getElementById("jeuLettres");
+  const setupChiffresEl = document.getElementById("setupChiffres");
+  const jeuChiffresEl = document.getElementById("jeuChiffres");
+  const felicitationsEl = document.getElementById("felicitations");
+
+  // Menu
+  document.querySelectorAll(".menu-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const mode = btn.dataset.mode;
+      if (mode === "lettres-solo") { modeDuo = false; lancerJeuLettres(); }
+      if (mode === "lettres-duo") { modeDuo = true; afficherSetupDuo(); }
+      if (mode === "chiffres") afficherSetupChiffres();
+    });
+  });
+
+  document.querySelectorAll("[id^=retourMenu]").forEach(btn => {
+    btn.addEventListener("click", retourMenu);
+  });
+
+  function retourMenu() {
+    modeActuel = null;
+    modeDuo = false;
+    menuEl.classList.remove("hidden");
+    setupDuoEl.classList.add("hidden");
+    jeuLettresEl.classList.add("hidden");
+    setupChiffresEl.classList.add("hidden");
+    jeuChiffresEl.classList.add("hidden");
+    felicitationsEl.style.display = "none";
+  }
+
+  // ===== MODE 2 JOUEURS SETUP =====
+  function afficherSetupDuo() {
+    modeActuel = "lettres";
+    menuEl.classList.add("hidden");
+    setupDuoEl.classList.remove("hidden");
+    document.getElementById("motSecretJ1").value = "";
+    document.getElementById("motSecretJ1").focus();
+  }
+
+  document.getElementById("validerMotJ1").addEventListener("click", () => {
+    const mot = document.getElementById("motSecretJ1").value.trim().toUpperCase();
+    if (mot.length < 3) {
+      afficherMessage("messageSetupDuo", "Le mot doit faire 3 lettres minimum", "error");
+      return;
+    }
+    if (!/^[A-Z]+$/.test(mot)) {
+      afficherMessage("messageSetupDuo", "Uniquement des lettres A-Z", "error");
+      return;
+    }
+    motSecret = mot;
+    lancerJeuLettres(true);
+  });
+
+  // ===== JEU DE LETTRES =====
+  function lancerJeuLettres(estDuo = false) {
+    modeActuel = "lettres";
+    setupDuoEl.classList.add("hidden");
+    menuEl.classList.add("hidden");
+    jeuLettresEl.classList.remove("hidden");
+    felicitationsEl.style.display = "none";
+
+    if (!estDuo) {
+      motSecret = mots[Math.floor(Math.random() * mots.length)];
+    }
+
+    lettresTrouvees = Array(motSecret.length).fill("_");
+    lettresUtilisees.clear();
+    jeuTermine = false;
+
+    document.getElementById("tourJoueur").textContent = modeDuo? "Joueur 2 : à toi de deviner!" : "Devine le mot secret";
+    document.getElementById("listeLettres").innerHTML = "";
+    document.getElementById("saisieLettre").value = "";
+    afficherMessage("messageLettre", `Mot de ${motSecret.length} caractères à deviner`, "");
+    afficherRectangle();
+    document.getElementById("saisieLettre").focus();
+  }
+
+  function afficherRectangle() {
+    const ligne = "* " + lettresTrouvees.join(" ") + " *";
+    const bordure = "*".repeat(ligne.length);
+    const rect = document.getElementById("rectangle");
+    rect.textContent = `${bordure}\n${ligne}\n${bordure}`;
+    rect.classList.add("pop");
+    setTimeout(() => rect.classList.remove("pop"), 400);
+  }
+
+  document.getElementById("validerLettre").addEventListener("click", traiterLettre);
+  document.getElementById("saisieLettre").addEventListener("keypress", e => {
+    if (e.key === "Enter") traiterLettre();
+  });
+
+  function traiterLettre() {
+    if (jeuTermine) return;
+    const saisie = document.getElementById("saisieLettre").value.trim();
+    document.getElementById("saisieLettre").value = "";
+
+    if (saisie === CODE_ADMIN) {
+      lettresTrouvees = motSecret.split("");
+      afficherRectangle();
+      afficherMessage("messageLettre", "Code admin activé!", "success");
+      setTimeout(() => terminerJeu(`Le mot était: ${motSecret}`), 800);
+      return;
+    }
+
+    if (saisie.length!== 1 ||!/[a-zA-Z]/.test(saisie)) {
+      afficherMessage("messageLettre", "!Message : entre une seule lettre de A à Z", "error");
+      return;
+    }
+
+    const lettre = saisie.toUpperCase();
+    if (!lettresUtilisees.has(lettre)) {
+      lettresUtilisees.add(lettre);
+      const span = document.createElement("span");
+      span.textContent = lettre;
+      document.getElementById("listeLettres").appendChild(span);
+    }
+
+    let trouvee = false;
+    for (let i = 0; i < motSecret.length; i++) {
+      if (motSecret[i] === lettre) {
+        lettresTrouvees[i] = lettre;
+        trouvee = true;
+      }
+    }
+
+    afficherMessage("messageLettre", trouvee? "Bien joué!" : "!Message : il n'y a pas cette lettre", trouvee? "success" : "error");
+    afficherRectangle();
+
+    if (!lettresTrouvees.includes("_")) {
+      const msg = modeDuo? "Joueur 2 a gagné!" : `Le mot était: ${motSecret}`;
+      setTimeout(() => terminerJeu(msg), 800);
+    }
+  }
+
+  // ===== JEU DE CHIFFRES =====
+  function afficherSetupChiffres() {
+    modeActuel = "chiffres";
+    menuEl.classList.add("hidden");
+    setupChiffresEl.classList.remove("hidden");
+    felicitationsEl.style.display = "none";
+  }
+
+  document.getElementById("startChiffres").addEventListener("click", () => {
+    const max = parseInt(document.getElementById("maxNombre").value);
+    if (isNaN(max) || max < 1) {
+      afficherMessage("messageSetup", "Entre un nombre valide supérieur à 0", "error");
+      return;
+    }
+    maxIntervalle = max;
+    lancerJeuChiffres();
+  });
+
+  function lancerJeuChiffres() {
+    setupChiffresEl.classList.add("hidden");
+    jeuChiffresEl.classList.remove("hidden");
+
+    nombreSecret = Math.floor(Math.random() * (maxIntervalle + 1));
+    nbEssais = 0;
+    jeuTermine = false;
+
+    document.getElementById("intervalleAff").textContent = `0-${maxIntervalle}`;
+    document.getElementById("essaisAff").textContent = "0";
+    document.getElementById("saisieChiffre").value = "";
+    document.getElementById("saisieChiffre").focus();
+    afficherMessage("messageChiffre", `Devine le nombre entre 0 et ${maxIntervalle}`, "");
+  }
+
+  document.getElementById("validerChiffre").addEventListener("click", traiterChiffre);
+  document.getElementById("saisieChiffre").addEventListener("keypress", e => {
+    if (e.key === "Enter") traiterChiffre();
+  });
+
+  function traiterChiffre() {
+    if (jeuTermine) return;
+    const saisie = parseInt(document.getElementById("saisieChiffre").value);
+    document.getElementById("saisieChiffre").value = "";
+
+    if (isNaN(saisie)) {
+      afficherMessage("messageChiffre", "Entre un nombre valide", "error");
+      return;
+    }
+
+    nbEssais++;
+    document.getElementById("essaisAff").textContent = nbEssais;
+
+    if (saisie === nombreSecret) {
+      afficherMessage("messageChiffre", "Trouvé!", "success");
+      setTimeout(() => terminerJeu(`Nombre: ${nombreSecret} en ${nbEssais} essais`), 800);
+    } else if (saisie < nombreSecret) {
+      afficherMessage("messageChiffre", "C'est plus grand ↑", "warning");
+    } else {
+      afficherMessage("messageChiffre", "C'est plus petit ↓", "warning");
+    }
+  }
+
+  // ===== COMMUN =====
+  function afficherMessage(id, text, type) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = `message ${type}`;
+  }
+
+  function terminerJeu(texte) {
+    jeuTermine = true;
+    jeuLettresEl.classList.add("hidden");
+    jeuChiffresEl.classList.add("hidden");
+    felicitationsEl.style.display = "block";
+    document.getElementById("texteVictoire").textContent = texte;
+    lancerConfettis();
+  }
+
+  function lancerConfettis() {
+    const couleurs = ["#00f5d4", "#9b5de5", "#f72585", "#4cc9f0"];
+    for (let i = 0; i < 100; i++) {
+      setTimeout(() => {
+        const confetti = document.createElement("div");
+        confetti.className = "confetti";
+        confetti.style.left = Math.random() * 100 + "vw";
+        confetti.style.background = couleurs[Math.floor(Math.random() * couleurs.length)];
+        confetti.style.animationDuration = (Math.random() * 2 + 2) + "s";
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 3000);
+      }, i * 30);
+    }
+  }
+
+  document.getElementById("restart").addEventListener("click", () => {
+    if (modeActuel === "lettres" && modeDuo) afficherSetupDuo();
+    else if (modeActuel === "lettres") lancerJeuLettres();
+    else if (modeActuel === "chiffres") afficherSetupChiffres();
+  });
+
+  document.getElementById("changeMode").addEventListener("click", retourMenu);
+</script>
+</body>
+</html>
